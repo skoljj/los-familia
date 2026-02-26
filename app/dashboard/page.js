@@ -148,25 +148,27 @@ export default function DashboardPage() {
 
         <Separator />
 
-        {/* Child timeline viewer */}
-        <div>
-          <h2 className="text-lg font-semibold mb-3">Child Timelines</h2>
-          <FamilyMemberPicker
-            members={children}
-            selectedId={selectedChild}
-            onSelect={setSelectedChild}
-          />
-        </div>
-
-        {selectedChild && (
-          <div className="max-w-lg">
-            <Timeline
-              memberId={selectedChild}
-              familyId={family.id}
-              isParent={true}
+        {/* Child timeline viewer — side-by-side on desktop */}
+        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
+          <div className="space-y-3">
+            <h2 className="text-lg font-semibold">Child Timelines</h2>
+            <FamilyMemberPicker
+              members={children}
+              selectedId={selectedChild}
+              onSelect={setSelectedChild}
             />
           </div>
-        )}
+
+          {selectedChild && (
+            <div className="max-w-lg">
+              <Timeline
+                memberId={selectedChild}
+                familyId={family.id}
+                isParent={true}
+              />
+            </div>
+          )}
+        </div>
       </main>
     </div>
   );

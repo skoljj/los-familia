@@ -135,8 +135,8 @@ export default function CalendarPage() {
           </Button>
         </div>
 
-        {/* Week grid */}
-        <div className="grid grid-cols-7 gap-2">
+        {/* Week grid — 7 cols on md+, 2 cols on small tablets, 1 on tiny */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2">
           {weekDays.map((day) => {
             const dayStr = day.toISOString().split("T")[0];
             const isToday =
@@ -148,7 +148,7 @@ export default function CalendarPage() {
             return (
               <div
                 key={dayStr}
-                className={`min-h-[120px] rounded-lg border p-2 ${
+                className={`min-h-[100px] lg:min-h-[120px] rounded-lg border p-2 ${
                   isToday ? "bg-blue-50 border-blue-300" : "bg-white"
                 }`}
               >
