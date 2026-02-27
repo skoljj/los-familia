@@ -121,17 +121,6 @@ export default function LightsOutCard({ block }) {
         </p>
       </div>
 
-      {/* Animations */}
-      <style jsx>{`
-        @keyframes twinkle {
-          0%, 100% { opacity: 0.2; transform: scale(1); }
-          50% { opacity: 0.8; transform: scale(1.3); }
-        }
-        @keyframes soundWave {
-          0% { height: 6px; }
-          100% { height: 20px; }
-        }
-      `}</style>
     </div>
   );
 }
