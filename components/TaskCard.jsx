@@ -7,7 +7,9 @@ export default function TaskCard({
   index,
   isParent,
   onMarkDone,
+  onUndo,
   onAccept,
+  onUnaccept,
 }) {
   const isDone = task.status === "done" || task.status === "accepted";
   const isAccepted = task.status === "accepted";
@@ -26,12 +28,10 @@ export default function TaskCard({
               : "bg-blue-50/60 border border-blue-100"
       }`}
     >
-      {/* Emoji icon */}
       <div className="flex justify-center mb-2">
         <span className="text-4xl">{task.icon || "📋"}</span>
       </div>
 
-      {/* Task title with number */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <p className={`font-medium ${isDone ? "line-through opacity-60" : ""}`}>
@@ -65,7 +65,7 @@ export default function TaskCard({
           )}
         </div>
 
-        {/* Toggle circle */}
+        {/* Toggle circle — every state is tappable to undo */}
         <div className="shrink-0 pt-1">
           {awaitingAccept ? (
             <button
@@ -76,13 +76,25 @@ export default function TaskCard({
               ✓
             </button>
           ) : isAccepted ? (
-            <div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-white font-bold text-lg">
+            <button
+              onClick={() => isParent && onUnaccept?.(task.id)}
+              className={`w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-white font-bold text-lg ${
+                isParent ? "active:scale-90 transition-transform cursor-pointer" : ""
+              }`}
+              title={isParent ? "Undo acceptance" : ""}
+            >
               ✓
-            </div>
+            </button>
           ) : task.status === "done" ? (
-            <div className="w-10 h-10 rounded-full border-3 border-blue-300 bg-blue-100 flex items-center justify-center">
+            <button
+              onClick={() => !isParent && onUndo?.(task.id)}
+              className={`w-10 h-10 rounded-full border-3 border-blue-300 bg-blue-100 flex items-center justify-center active:scale-90 transition-transform ${
+                isParent ? "cursor-default" : "cursor-pointer"
+              }`}
+              title={!isParent ? "Undo" : ""}
+            >
               <div className="w-5 h-5 rounded-full bg-blue-400" />
-            </div>
+            </button>
           ) : isParentInput && !isParent ? (
             <div className="w-10 h-10 rounded-full border-3 border-purple-200 bg-purple-50 flex items-center justify-center">
               <span className="text-purple-300 text-sm">🔒</span>

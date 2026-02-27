@@ -121,6 +121,16 @@ export default function Timeline({ memberId, familyId, isParent = false }) {
     loadData();
   }
 
+  async function handleUndo(taskId) {
+    const supabase = getSupabaseBrowser();
+    if (!supabase) return;
+    await supabase
+      .from("tasks")
+      .update({ status: "pending", completed_at: null })
+      .eq("id", taskId);
+    loadData();
+  }
+
   async function handleAccept(taskId) {
     const supabase = getSupabaseBrowser();
     if (!supabase) return;
@@ -141,6 +151,31 @@ export default function Timeline({ memberId, familyId, isParent = false }) {
     await supabase.rpc("increment_stars", {
       member_uuid: memberId,
       amount: task.star_value,
+    });
+
+    loadData();
+  }
+
+  async function handleUnaccept(taskId) {
+    const supabase = getSupabaseBrowser();
+    if (!supabase) return;
+    const task = tasks.find((t) => t.id === taskId);
+    if (!task) return;
+
+    await supabase
+      .from("tasks")
+      .update({ status: "done", accepted_at: null })
+      .eq("id", taskId);
+
+    await supabase
+      .from("star_ledger")
+      .delete()
+      .eq("task_id", taskId)
+      .eq("member_id", memberId);
+
+    await supabase.rpc("increment_stars", {
+      member_uuid: memberId,
+      amount: -task.star_value,
     });
 
     loadData();
@@ -175,7 +210,9 @@ export default function Timeline({ memberId, familyId, isParent = false }) {
             tasks={tasksByBlock[block.id] || []}
             isParent={isParent}
             onMarkDone={handleMarkDone}
+            onUndo={handleUndo}
             onAccept={handleAccept}
+            onUnaccept={handleUnaccept}
             defaultExpanded={block.phase === "now" || block.phase === "next"}
           />
         </div>
@@ -216,6 +253,14 @@ export default function Timeline({ memberId, familyId, isParent = false }) {
                       className="w-10 h-10 rounded-full border-3 border-gray-300 bg-white active:scale-90 transition-transform"
                     />
                   )}
+                  {task.status === "done" && !isParent && (
+                    <button
+                      onClick={() => handleUndo(task.id)}
+                      className="w-10 h-10 rounded-full border-3 border-blue-300 bg-blue-100 flex items-center justify-center active:scale-90 transition-transform"
+                    >
+                      <div className="w-5 h-5 rounded-full bg-blue-400" />
+                    </button>
+                  )}
                   {task.status === "done" && isParent && (
                     <button
                       onClick={() => handleAccept(task.id)}
@@ -225,9 +270,14 @@ export default function Timeline({ memberId, familyId, isParent = false }) {
                     </button>
                   )}
                   {task.status === "accepted" && (
-                    <div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-white font-bold">
+                    <button
+                      onClick={() => isParent && handleUnaccept(task.id)}
+                      className={`w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-white font-bold ${
+                        isParent ? "active:scale-90 transition-transform cursor-pointer" : ""
+                      }`}
+                    >
                       ✓
-                    </div>
+                    </button>
                   )}
                 </div>
               </div>

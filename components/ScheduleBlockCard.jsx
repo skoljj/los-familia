@@ -23,7 +23,9 @@ export default function ScheduleBlockCard({
   tasks,
   isParent,
   onMarkDone,
+  onUndo,
   onAccept,
+  onUnaccept,
   defaultExpanded = false,
 }) {
   const [expanded, setExpanded] = useState(defaultExpanded);
@@ -103,7 +105,9 @@ export default function ScheduleBlockCard({
                   index={i}
                   isParent={isParent}
                   onMarkDone={onMarkDone}
+                  onUndo={onUndo}
                   onAccept={onAccept}
+                  onUnaccept={onUnaccept}
                 />
               ))}
             </div>
