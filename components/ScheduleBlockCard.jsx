@@ -12,6 +12,7 @@ export default function ScheduleBlockCard({
   onUndo,
   onAccept,
   onUnaccept,
+  onPicklistSelect,
   defaultExpanded = false,
 }) {
   if (block.label === "Lights Out") {
@@ -28,6 +29,7 @@ export default function ScheduleBlockCard({
       onUndo={onUndo}
       onAccept={onAccept}
       onUnaccept={onUnaccept}
+      onPicklistSelect={onPicklistSelect}
       defaultExpanded={defaultExpanded}
     />
   );

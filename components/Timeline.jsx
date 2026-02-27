@@ -171,6 +171,25 @@ export default function Timeline({ memberId, familyId, isParent = false, date })
     loadData();
   }
 
+  async function handlePicklistSelect(taskId, value) {
+    if (!isParent) return;
+    const supabase = getSupabaseBrowser();
+    if (!supabase) return;
+    const task = tasks.find((t) => t.id === taskId);
+    if (!task) return;
+
+    const updatedMetadata = { ...task.metadata, selected: value };
+    await supabase
+      .from("tasks")
+      .update({
+        metadata: updatedMetadata,
+        status: "done",
+        completed_at: new Date().toISOString(),
+      })
+      .eq("id", taskId);
+    loadData();
+  }
+
   async function handleAccept(taskId) {
     if (!isParent) return;
     const supabase = getSupabaseBrowser();
@@ -287,6 +306,7 @@ export default function Timeline({ memberId, familyId, isParent = false, date })
               onUndo={childCanInteract || effectiveParent ? handleUndo : undefined}
               onAccept={effectiveParent ? handleAccept : undefined}
               onUnaccept={effectiveParent ? handleUnaccept : undefined}
+              onPicklistSelect={effectiveParent ? handlePicklistSelect : undefined}
               defaultExpanded={
                 isViewingPast
                   ? true

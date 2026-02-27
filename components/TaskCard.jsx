@@ -10,11 +10,29 @@ export default function TaskCard({
   onUndo,
   onAccept,
   onUnaccept,
+  onPicklistSelect,
 }) {
   const isDone = task.status === "done" || task.status === "accepted";
   const isAccepted = task.status === "accepted";
   const awaitingAccept = task.status === "done" && isParent;
   const isParentInput = task.input_type === "parent";
+
+  const isPicklist = task.metadata?.type === "picklist";
+  const picklistOptions = task.metadata?.options || [];
+  const selectedValue = task.metadata?.selected;
+
+  if (isPicklist) {
+    return (
+      <PicklistCard
+        task={task}
+        index={index}
+        isParent={isParent}
+        options={picklistOptions}
+        selectedValue={selectedValue}
+        onSelect={onPicklistSelect}
+      />
+    );
+  }
 
   const statusBg = isAccepted
     ? "bg-emerald-50 border border-emerald-200"
@@ -108,6 +126,122 @@ export default function TaskCard({
           <Meta task={task} isParentInput={isParentInput} />
         </div>
         {toggle}
+      </div>
+    </div>
+  );
+}
+
+function PicklistCard({ task, index, isParent, options, selectedValue, onSelect }) {
+  const selectedOption = options.find((o) => o.value === selectedValue);
+  const hasSelection = !!selectedValue;
+
+  const bgColor = hasSelection
+    ? selectedValue === "on_time"
+      ? "bg-emerald-50 border border-emerald-200"
+      : selectedValue === "ok"
+        ? "bg-amber-50 border border-amber-200"
+        : selectedValue === "late"
+          ? "bg-red-50 border border-red-200"
+          : "bg-gray-50 border border-gray-200"
+    : "bg-purple-50/60 border border-purple-100";
+
+  return (
+    <div className={`relative rounded-2xl md:rounded-xl transition-all ${bgColor}`}>
+      {/* Portrait */}
+      <div className="p-4 md:hidden">
+        <div className="flex justify-center mb-2">
+          <span className="text-4xl">{task.icon || "📋"}</span>
+        </div>
+        <p className="font-medium text-center mb-3">
+          {index != null ? `${String(index + 1).padStart(2, "0")}. ` : ""}
+          {task.title}
+        </p>
+
+        {isParent ? (
+          <div className="grid grid-cols-2 gap-2">
+            {options.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => onSelect?.(task.id, opt.value)}
+                className={`flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-all active:scale-95 ${
+                  selectedValue === opt.value
+                    ? "bg-purple-600 text-white shadow-md ring-2 ring-purple-300"
+                    : "bg-white border border-purple-200 text-purple-800 hover:border-purple-400"
+                }`}
+              >
+                <span>{opt.emoji}</span>
+                <span className="truncate">{opt.label}</span>
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center">
+            {hasSelection ? (
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/80 border">
+                <span className="text-lg">{selectedOption?.emoji}</span>
+                <span className="font-semibold text-sm">{selectedOption?.label}</span>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center gap-1.5 text-purple-300">
+                <span className="text-sm">🔒</span>
+                <span className="text-xs italic">Waiting for parent</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        <div className="flex items-center gap-2 mt-2 justify-center">
+          <span className="text-[10px] uppercase tracking-wide text-purple-600 font-medium">
+            Parent
+          </span>
+        </div>
+      </div>
+
+      {/* Landscape */}
+      <div className="hidden md:flex items-center gap-3 px-3 py-2.5">
+        <span className="text-2xl shrink-0">{task.icon || "📋"}</span>
+        <div className="flex-1 min-w-0">
+          <p className="font-medium text-sm leading-tight">
+            {index != null ? `${String(index + 1).padStart(2, "0")}. ` : ""}
+            {task.title}
+          </p>
+          <span className="text-[10px] uppercase tracking-wide text-purple-600 font-medium">
+            Parent
+          </span>
+        </div>
+
+        {isParent ? (
+          <div className="flex items-center gap-1.5 shrink-0">
+            {options.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => onSelect?.(task.id, opt.value)}
+                title={opt.label}
+                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all active:scale-95 ${
+                  selectedValue === opt.value
+                    ? "bg-purple-600 text-white shadow ring-1 ring-purple-300"
+                    : "bg-white border border-purple-200 text-purple-700 hover:border-purple-400"
+                }`}
+              >
+                <span>{opt.emoji}</span>
+                <span className="hidden lg:inline">{opt.label}</span>
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className="shrink-0">
+            {hasSelection ? (
+              <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-white/80 border text-xs font-semibold">
+                <span>{selectedOption?.emoji}</span>
+                {selectedOption?.label}
+              </span>
+            ) : (
+              <div className="w-9 h-9 rounded-full border-3 border-purple-200 bg-purple-50 flex items-center justify-center">
+                <span className="text-purple-300 text-sm">🔒</span>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

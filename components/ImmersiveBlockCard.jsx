@@ -788,6 +788,7 @@ export default function ImmersiveBlockCard({
   onUndo,
   onAccept,
   onUnaccept,
+  onPicklistSelect,
   defaultExpanded = false,
 }) {
   const [expanded, setExpanded] = useState(defaultExpanded);
@@ -881,6 +882,7 @@ export default function ImmersiveBlockCard({
             onUndo={onUndo}
             onAccept={onAccept}
             onUnaccept={onUnaccept}
+            onPicklistSelect={onPicklistSelect}
           />
         ))}
       </div>
@@ -934,6 +936,7 @@ export default function ImmersiveBlockCard({
                   onUndo={onUndo}
                   onAccept={onAccept}
                   onUnaccept={onUnaccept}
+                  onPicklistSelect={onPicklistSelect}
                 />
               ))}
             </div>
