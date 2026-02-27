@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { formatTimeRange, minutesToDisplay } from "@/lib/time-utils";
 import TaskCard from "./TaskCard";
+import LightsOutCard from "./LightsOutCard";
 
 const PHASE_STYLES = {
   past: "opacity-50",
@@ -34,6 +35,10 @@ export default function ScheduleBlockCard({
   const completedCount = tasks?.filter(
     (t) => t.status === "done" || t.status === "accepted"
   ).length || 0;
+
+  if (block.label === "Lights Out") {
+    return <LightsOutCard block={block} />;
+  }
 
   return (
     <div
