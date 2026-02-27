@@ -363,16 +363,27 @@ function SceneElements({ scene }) {
   return null;
 }
 
-function YotoBadge({ tasks }) {
-  const morningTasks = tasks || [];
-  const allDone = morningTasks.length > 0 && morningTasks.every(
+function YotoMilestone({ prereqTasks, label }) {
+  const list = prereqTasks || [];
+  if (list.length === 0) return null;
+  const allDone = list.every(
     (t) => t.status === "done" || t.status === "accepted"
   );
-  if (!allDone) return null;
+  if (allDone) {
+    return (
+      <div className="flex items-center gap-1.5 bg-green-500/20 border border-green-400/40 rounded-full px-3 py-1 mt-1 animate-bounce-gentle">
+        <span className="text-sm">🎧</span>
+        <span className="text-xs font-bold text-green-800">Yoto Unlocked!</span>
+      </div>
+    );
+  }
+  const remaining = list.filter(
+    (t) => t.status !== "done" && t.status !== "accepted"
+  ).length;
   return (
-    <div className="flex items-center gap-1.5 bg-green-500/20 border border-green-400/40 rounded-full px-3 py-1 mt-1 animate-bounce-gentle">
-      <span className="text-sm">🎧</span>
-      <span className="text-xs font-bold text-green-800">Yoto Earned!</span>
+    <div className="flex items-center gap-1.5 bg-gray-200/60 border border-gray-300/40 rounded-full px-3 py-1 mt-1">
+      <span className="text-sm opacity-40">🎧</span>
+      <span className="text-xs text-gray-500">{label} — {remaining} left</span>
     </div>
   );
 }
@@ -380,7 +391,7 @@ function YotoBadge({ tasks }) {
 export default function ImmersiveBlockCard({
   block,
   tasks,
-  morningTasks,
+  yotoPrereqs,
   isParent,
   onMarkDone,
   onUndo,
@@ -427,8 +438,11 @@ export default function ImmersiveBlockCard({
             </h3>
             <p className={`text-xs ${theme.accentMuted} mt-0.5`}>{timeRange}</p>
 
-            {block.label === "Breakfast" && morningTasks && (
-              <YotoBadge tasks={morningTasks} />
+            {yotoPrereqs && (
+              <YotoMilestone
+                prereqTasks={yotoPrereqs}
+                label={block.label === "Breakfast" ? "Finish wake-up by 7:00" : "All tasks by 7:35"}
+              />
             )}
           </div>
 

@@ -201,13 +201,21 @@ export default function Timeline({ memberId, familyId, isParent = false }) {
       )}
 
       {classifiedBlocks.map((block) => {
-        const wakeBlock = classifiedBlocks.find(
-          (b) => b.label === "Wake Up Routine"
-        );
-        const morningTasks =
-          block.label === "Breakfast" && wakeBlock
-            ? tasksByBlock[wakeBlock.id] || []
-            : undefined;
+        let yotoPrereqs;
+
+        if (block.label === "Breakfast") {
+          const wakeBlock = classifiedBlocks.find(
+            (b) => b.label === "Wake Up Routine"
+          );
+          if (wakeBlock) yotoPrereqs = tasksByBlock[wakeBlock.id] || [];
+        }
+
+        if (block.label === "School") {
+          const transBlock = classifiedBlocks.find(
+            (b) => b.label === "Transition to School"
+          );
+          if (transBlock) yotoPrereqs = tasksByBlock[transBlock.id] || [];
+        }
 
         return (
           <div
@@ -217,7 +225,7 @@ export default function Timeline({ memberId, familyId, isParent = false }) {
             <ScheduleBlockCard
               block={block}
               tasks={tasksByBlock[block.id] || []}
-              morningTasks={morningTasks}
+              yotoPrereqs={yotoPrereqs}
               isParent={isParent}
               onMarkDone={handleMarkDone}
               onUndo={handleUndo}

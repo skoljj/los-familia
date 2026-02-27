@@ -6,7 +6,7 @@ import ImmersiveBlockCard from "./ImmersiveBlockCard";
 export default function ScheduleBlockCard({
   block,
   tasks,
-  morningTasks,
+  yotoPrereqs,
   isParent,
   onMarkDone,
   onUndo,
@@ -22,7 +22,7 @@ export default function ScheduleBlockCard({
     <ImmersiveBlockCard
       block={block}
       tasks={tasks}
-      morningTasks={morningTasks}
+      yotoPrereqs={yotoPrereqs}
       isParent={isParent}
       onMarkDone={onMarkDone}
       onUndo={onUndo}
