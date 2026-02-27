@@ -445,7 +445,7 @@ export default function ImmersiveBlockCard({
         {yotoPrereqs && (
           <YotoMilestone
             prereqTasks={yotoPrereqs}
-            label={block.label === "Breakfast" ? "Finish wake-up by 7:00" : "All tasks by 7:35"}
+            label={block.label === "Breakfast" ? "Finish wake-up by 7:00" : "All done by 7:35"}
           />
         )}
 

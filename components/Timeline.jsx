@@ -210,11 +210,8 @@ export default function Timeline({ memberId, familyId, isParent = false }) {
           if (wakeBlock) yotoPrereqs = tasksByBlock[wakeBlock.id] || [];
         }
 
-        if (block.label === "School") {
-          const transBlock = classifiedBlocks.find(
-            (b) => b.label === "Transition to School"
-          );
-          if (transBlock) yotoPrereqs = tasksByBlock[transBlock.id] || [];
+        if (block.label === "Transition to School") {
+          yotoPrereqs = tasksByBlock[block.id] || [];
         }
 
         return (
