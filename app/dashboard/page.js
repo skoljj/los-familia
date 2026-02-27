@@ -8,6 +8,7 @@ import NavBar from "@/components/NavBar";
 import Timeline from "@/components/Timeline";
 import FamilyMemberPicker from "@/components/FamilyMemberPicker";
 import StarCounter from "@/components/StarCounter";
+import DateNavigator from "@/components/DateNavigator";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
@@ -16,6 +17,9 @@ export default function DashboardPage() {
   const router = useRouter();
   const [children, setChildren] = useState([]);
   const [selectedChild, setSelectedChild] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(
+    new Date().toISOString().split("T")[0]
+  );
   const [stats, setStats] = useState({ totalTasks: 0, completed: 0, accepted: 0 });
 
   useEffect(() => {
@@ -45,12 +49,11 @@ export default function DashboardPage() {
     if (!family) return;
     const supabase = getSupabaseBrowser();
     if (!supabase) return;
-    const today = new Date().toISOString().split("T")[0];
     const { data } = await supabase
       .from("tasks")
       .select("status")
       .eq("family_id", family.id)
-      .eq("task_date", today);
+      .eq("task_date", selectedDate);
 
     if (data) {
       setStats({
@@ -59,7 +62,7 @@ export default function DashboardPage() {
         accepted: data.filter((t) => t.status === "accepted").length,
       });
     }
-  }, [family]);
+  }, [family, selectedDate]);
 
   useEffect(() => {
     loadChildren();
@@ -90,19 +93,28 @@ export default function DashboardPage() {
 
   if (!member || !family) return null;
 
+  const dateObj = new Date(selectedDate + "T12:00:00");
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50 to-white">
       <NavBar />
       <main className="max-w-6xl mx-auto p-4 space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold">Family Dashboard</h1>
-          <p className="text-sm text-muted-foreground">
-            {new Date().toLocaleDateString("en-US", {
-              weekday: "long",
-              month: "long",
-              day: "numeric",
-            })}
-          </p>
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div>
+            <h1 className="text-2xl font-bold">Family Dashboard</h1>
+            <p className="text-sm text-muted-foreground">
+              {dateObj.toLocaleDateString("en-US", {
+                weekday: "long",
+                month: "long",
+                day: "numeric",
+              })}
+            </p>
+          </div>
+          <DateNavigator
+            selectedDate={selectedDate}
+            onDateChange={setSelectedDate}
+            isParent={true}
+          />
         </div>
 
         {/* Stats row */}
@@ -148,7 +160,7 @@ export default function DashboardPage() {
 
         <Separator />
 
-        {/* Child timeline viewer — side-by-side on desktop */}
+        {/* Child timeline viewer */}
         <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
           <div className="space-y-3">
             <h2 className="text-lg font-semibold">Child Timelines</h2>
@@ -162,9 +174,11 @@ export default function DashboardPage() {
           {selectedChild && (
             <div className="max-w-lg md:max-w-2xl lg:max-w-4xl xl:max-w-full">
               <Timeline
+                key={`${selectedChild}-${selectedDate}`}
                 memberId={selectedChild}
                 familyId={family.id}
                 isParent={true}
+                date={selectedDate}
               />
             </div>
           )}

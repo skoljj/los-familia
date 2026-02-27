@@ -5,27 +5,33 @@ import { getSupabaseBrowser } from "@/lib/supabase-client";
 import { classifyBlocks, getTodayDayType } from "@/lib/time-utils";
 import ScheduleBlockCard from "./ScheduleBlockCard";
 
-export default function Timeline({ memberId, familyId, isParent = false }) {
+export default function Timeline({ memberId, familyId, isParent = false, date }) {
   const [blocks, setBlocks] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [templateName, setTemplateName] = useState("");
   const [now, setNow] = useState(new Date());
   const nowBlockRef = useRef(null);
-
   const spawnedRef = useRef(false);
+
+  const today = new Date().toISOString().split("T")[0];
+  const viewDate = date || today;
+  const isViewingPast = viewDate < today;
+  const isViewingToday = viewDate === today;
+
+  const canInteract = isViewingToday || (isViewingPast && isParent);
 
   const loadData = useCallback(async () => {
     const supabase = getSupabaseBrowser();
     if (!supabase) return;
 
-    const todayType = getTodayDayType();
-    const today = new Date().toISOString().split("T")[0];
+    const viewDateObj = new Date(viewDate + "T12:00:00");
+    const dayType = getTodayDayType(viewDateObj);
 
     const { data: templates } = await supabase
       .from("schedule_templates")
       .select("*")
       .eq("assigned_to", memberId)
-      .contains("day_types", [todayType]);
+      .contains("day_types", [dayType]);
 
     const template = templates?.[0];
 
@@ -48,53 +54,55 @@ export default function Timeline({ memberId, familyId, isParent = false }) {
         .from("tasks")
         .select("*")
         .eq("assigned_to", memberId)
-        .eq("task_date", today)
+        .eq("task_date", viewDate)
         .order("sort_order"),
     ]);
 
     if (blockData) setBlocks(blockData);
 
-    if ((!taskData || taskData.length === 0) && !spawnedRef.current) {
+    if ((!taskData || taskData.length === 0) && !spawnedRef.current && viewDate <= today) {
       spawnedRef.current = true;
       try {
         const res = await fetch("/api/tasks/spawn", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ date: today }),
+          body: JSON.stringify({ date: viewDate }),
         });
         if (res.ok) {
           const { data: freshTasks } = await supabase
             .from("tasks")
             .select("*")
             .eq("assigned_to", memberId)
-            .eq("task_date", today)
+            .eq("task_date", viewDate)
             .order("sort_order");
           if (freshTasks) setTasks(freshTasks);
           return;
         }
       } catch {
-        // spawn failed — fall through with empty tasks
+        // spawn failed
       }
     }
 
     if (taskData) setTasks(taskData);
-  }, [memberId]);
+  }, [memberId, viewDate, today]);
 
   useEffect(() => {
+    spawnedRef.current = false;
     loadData();
   }, [loadData]);
 
   useEffect(() => {
-    const timer = setInterval(() => setNow(new Date()), 30000);
+    if (!isViewingToday) return;
+    const timer = setInterval(() => setNow(new Date()), 10000);
     return () => clearInterval(timer);
-  }, []);
+  }, [isViewingToday]);
 
   useEffect(() => {
     const supabase = getSupabaseBrowser();
     if (!supabase) return;
 
     const channel = supabase
-      .channel(`timeline-${memberId}`)
+      .channel(`timeline-${memberId}-${viewDate}`)
       .on(
         "postgres_changes",
         {
@@ -111,18 +119,22 @@ export default function Timeline({ memberId, familyId, isParent = false }) {
       const sb = getSupabaseBrowser();
       if (sb) sb.removeChannel(channel);
     };
-  }, [memberId, loadData]);
+  }, [memberId, viewDate, loadData]);
 
   useEffect(() => {
-    if (nowBlockRef.current) {
+    if (nowBlockRef.current && isViewingToday) {
       nowBlockRef.current.scrollIntoView({
         behavior: "smooth",
         block: "center",
       });
     }
-  }, [blocks.length]);
+  }, [blocks.length, isViewingToday]);
 
-  const classifiedBlocks = classifyBlocks(blocks, now);
+  const classifiedBlocks = isViewingToday
+    ? classifyBlocks(blocks, now)
+    : isViewingPast
+      ? blocks.map((b) => ({ ...b, phase: "past", remainingMinutes: null }))
+      : classifyBlocks(blocks, now);
 
   const tasksByBlock = {};
   const unattachedTasks = [];
@@ -138,6 +150,7 @@ export default function Timeline({ memberId, familyId, isParent = false }) {
   }
 
   async function handleMarkDone(taskId) {
+    if (!canInteract) return;
     const supabase = getSupabaseBrowser();
     if (!supabase) return;
     await supabase
@@ -148,6 +161,7 @@ export default function Timeline({ memberId, familyId, isParent = false }) {
   }
 
   async function handleUndo(taskId) {
+    if (!canInteract) return;
     const supabase = getSupabaseBrowser();
     if (!supabase) return;
     await supabase
@@ -158,6 +172,7 @@ export default function Timeline({ memberId, familyId, isParent = false }) {
   }
 
   async function handleAccept(taskId) {
+    if (!isParent) return;
     const supabase = getSupabaseBrowser();
     if (!supabase) return;
     const task = tasks.find((t) => t.id === taskId);
@@ -183,6 +198,7 @@ export default function Timeline({ memberId, familyId, isParent = false }) {
   }
 
   async function handleUnaccept(taskId) {
+    if (!isParent) return;
     const supabase = getSupabaseBrowser();
     if (!supabase) return;
     const task = tasks.find((t) => t.id === taskId);
@@ -210,13 +226,18 @@ export default function Timeline({ memberId, familyId, isParent = false }) {
   if (classifiedBlocks.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-        <p className="text-lg">No schedule for today</p>
+        <p className="text-lg">No schedule for this day</p>
         <p className="text-sm mt-1">
-          No template matches today. Ask a parent to set one up.
+          {isViewingPast
+            ? "No data recorded for this date."
+            : "No template matches. Ask a parent to set one up."}
         </p>
       </div>
     );
   }
+
+  const effectiveParent = canInteract ? isParent : false;
+  const childCanInteract = canInteract && !isParent;
 
   return (
     <div className="space-y-3">
@@ -224,6 +245,14 @@ export default function Timeline({ memberId, familyId, isParent = false }) {
         <p className="text-xs text-muted-foreground text-center uppercase tracking-wider font-medium">
           {templateName} Schedule
         </p>
+      )}
+
+      {isViewingPast && !isParent && (
+        <div className="text-center py-2">
+          <span className="text-xs bg-orange-50 text-orange-600 px-3 py-1 rounded-full border border-orange-200 font-medium">
+            Past day — view only
+          </span>
+        </div>
       )}
 
       {classifiedBlocks.map((block) => {
@@ -240,27 +269,34 @@ export default function Timeline({ memberId, familyId, isParent = false }) {
           yotoPrereqs = tasksByBlock[block.id] || [];
         }
 
+        const blockForView = isViewingPast
+          ? { ...block, phase: "review" }
+          : block;
+
         return (
           <div
             key={block.id}
             ref={block.phase === "now" ? nowBlockRef : null}
           >
             <ScheduleBlockCard
-              block={block}
+              block={blockForView}
               tasks={tasksByBlock[block.id] || []}
               yotoPrereqs={yotoPrereqs}
-              isParent={isParent}
-              onMarkDone={handleMarkDone}
-              onUndo={handleUndo}
-              onAccept={handleAccept}
-              onUnaccept={handleUnaccept}
-              defaultExpanded={block.phase === "now" || block.phase === "next"}
+              isParent={effectiveParent}
+              onMarkDone={childCanInteract || effectiveParent ? handleMarkDone : undefined}
+              onUndo={childCanInteract || effectiveParent ? handleUndo : undefined}
+              onAccept={effectiveParent ? handleAccept : undefined}
+              onUnaccept={effectiveParent ? handleUnaccept : undefined}
+              defaultExpanded={
+                isViewingPast
+                  ? true
+                  : block.phase === "now" || block.phase === "next"
+              }
             />
           </div>
         );
       })}
 
-      {/* Bonus / unattached tasks */}
       {unattachedTasks.length > 0 && (
         <div className="rounded-2xl border bg-gradient-to-r from-amber-50 to-yellow-50 p-4 mt-4">
           <div className="flex items-center gap-2 mb-3">
@@ -268,7 +304,7 @@ export default function Timeline({ memberId, familyId, isParent = false }) {
             <h3 className="font-semibold text-sm">Bonus Tasks</h3>
           </div>
           <div className="space-y-2">
-            {unattachedTasks.map((task, i) => (
+            {unattachedTasks.map((task) => (
               <div
                 key={task.id}
                 className={`flex items-center justify-between p-3 rounded-xl ${
@@ -289,13 +325,13 @@ export default function Timeline({ memberId, familyId, isParent = false }) {
                   </div>
                 </div>
                 <div>
-                  {task.status === "pending" && !isParent && (
+                  {task.status === "pending" && childCanInteract && (
                     <button
                       onClick={() => handleMarkDone(task.id)}
                       className="w-10 h-10 rounded-full border-3 border-gray-300 bg-white active:scale-90 transition-transform"
                     />
                   )}
-                  {task.status === "done" && !isParent && (
+                  {task.status === "done" && childCanInteract && (
                     <button
                       onClick={() => handleUndo(task.id)}
                       className="w-10 h-10 rounded-full border-3 border-blue-300 bg-blue-100 flex items-center justify-center active:scale-90 transition-transform"
@@ -303,7 +339,7 @@ export default function Timeline({ memberId, familyId, isParent = false }) {
                       <div className="w-5 h-5 rounded-full bg-blue-400" />
                     </button>
                   )}
-                  {task.status === "done" && isParent && (
+                  {task.status === "done" && effectiveParent && (
                     <button
                       onClick={() => handleAccept(task.id)}
                       className="w-10 h-10 rounded-full border-3 border-amber-400 bg-amber-100 flex items-center justify-center text-amber-600 font-bold active:scale-90 transition-transform"
@@ -313,9 +349,9 @@ export default function Timeline({ memberId, familyId, isParent = false }) {
                   )}
                   {task.status === "accepted" && (
                     <button
-                      onClick={() => isParent && handleUnaccept(task.id)}
+                      onClick={() => effectiveParent && handleUnaccept(task.id)}
                       className={`w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-white font-bold ${
-                        isParent ? "active:scale-90 transition-transform cursor-pointer" : ""
+                        effectiveParent ? "active:scale-90 transition-transform cursor-pointer" : ""
                       }`}
                     >
                       ✓

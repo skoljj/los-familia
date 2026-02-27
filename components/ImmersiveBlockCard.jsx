@@ -30,29 +30,44 @@ function StatusPill({ block, hasTasks, completedCount, taskCount }) {
   const isNow = block.phase === "now";
   const isPast = block.phase === "past";
   const isNext = block.phase === "next";
+  const isReview = block.phase === "review";
 
   return (
-    <div className="flex items-center gap-2 flex-wrap justify-center">
-      {hasTasks && (
-        <span className="text-[11px] font-semibold px-3 py-1 rounded-full bg-black/20 backdrop-blur-md border border-white/15 text-white tabular-nums">
-          {completedCount} / {taskCount}
-        </span>
-      )}
+    <div className="flex flex-col items-center gap-2">
+      {/* Countdown timer — large enough to read from across the room */}
       {isNow && block.remainingMinutes != null && (
-        <span className="text-sm font-bold px-3.5 py-1 rounded-full bg-white/20 backdrop-blur-md border border-white/20 text-white tabular-nums shadow-lg">
-          {minutesToDisplay(block.remainingMinutes)}
-        </span>
+        <div className="bg-black/25 backdrop-blur-lg rounded-2xl px-6 py-3 md:px-8 md:py-4 lg:px-10 lg:py-5 border border-white/15 shadow-2xl">
+          <p className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black text-white tabular-nums tracking-tight leading-none drop-shadow-[0_2px_12px_rgba(0,0,0,0.4)]">
+            {minutesToDisplay(block.remainingMinutes)}
+          </p>
+          <p className="text-[10px] md:text-xs lg:text-sm text-white/50 uppercase tracking-[0.2em] text-center mt-1">
+            remaining
+          </p>
+        </div>
       )}
-      {isPast && (
-        <span className="text-[11px] px-3 py-1 rounded-full bg-white/15 text-white/80 backdrop-blur-sm">
-          Complete ✓
-        </span>
-      )}
-      {isNext && (
-        <span className="text-[11px] font-bold px-3 py-1 rounded-full bg-amber-400/30 border border-amber-200/30 text-white backdrop-blur-sm animate-pulse">
-          Up Next
-        </span>
-      )}
+
+      <div className="flex items-center gap-2 flex-wrap justify-center">
+        {hasTasks && (
+          <span className="text-[11px] font-semibold px-3 py-1 rounded-full bg-black/20 backdrop-blur-md border border-white/15 text-white tabular-nums">
+            {completedCount} / {taskCount}
+          </span>
+        )}
+        {isPast && (
+          <span className="text-[11px] px-3 py-1 rounded-full bg-white/15 text-white/80 backdrop-blur-sm">
+            Complete ✓
+          </span>
+        )}
+        {isReview && hasTasks && (
+          <span className="text-[11px] px-3 py-1 rounded-full bg-white/15 text-white/80 backdrop-blur-sm">
+            {completedCount === taskCount ? "All done ✓" : `${completedCount} of ${taskCount}`}
+          </span>
+        )}
+        {isNext && (
+          <span className="text-[11px] font-bold px-3 py-1 rounded-full bg-amber-400/30 border border-amber-200/30 text-white backdrop-blur-sm animate-pulse">
+            Up Next
+          </span>
+        )}
+      </div>
     </div>
   );
 }
@@ -785,6 +800,7 @@ export default function ImmersiveBlockCard({
   const isPast = block.phase === "past";
   const isNow = block.phase === "now";
   const isNext = block.phase === "next";
+  const isReview = block.phase === "review";
 
   const SceneComponent = SCENE_MAP[block.label];
 
@@ -874,11 +890,13 @@ export default function ImmersiveBlockCard({
   /* ── Phase ring styles ───────────────────────────────────── */
   const phaseRing = isPast
     ? "opacity-40"
-    : isNow
-      ? "ring-2 ring-blue-400/80 shadow-xl shadow-blue-200/30"
-      : isNext
-        ? "ring-1 ring-amber-300/60 shadow-lg shadow-amber-100/20"
-        : "shadow-md";
+    : isReview
+      ? "shadow-md opacity-90"
+      : isNow
+        ? "ring-3 ring-blue-400/80 shadow-2xl shadow-blue-200/40"
+        : isNext
+          ? "ring-1 ring-amber-300/60 shadow-lg shadow-amber-100/20"
+          : "shadow-md";
 
   return (
     <div className={`rounded-3xl overflow-hidden transition-all duration-300 ${phaseRing}`}>
