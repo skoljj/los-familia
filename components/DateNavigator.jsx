@@ -1,16 +1,21 @@
 "use client";
 
+const EARLIEST_DATE = "2026-02-26";
+
 export default function DateNavigator({ selectedDate, onDateChange, isParent }) {
   const today = new Date().toISOString().split("T")[0];
   const isToday = selectedDate === today;
 
   const selected = new Date(selectedDate + "T12:00:00");
   const isPast = selectedDate < today;
+  const atEarliest = selectedDate <= EARLIEST_DATE;
 
   function shift(days) {
     const d = new Date(selected);
     d.setDate(d.getDate() + days);
-    onDateChange(d.toISOString().split("T")[0]);
+    const iso = d.toISOString().split("T")[0];
+    if (iso < EARLIEST_DATE || iso > today) return;
+    onDateChange(iso);
   }
 
   const dayLabel = selected.toLocaleDateString("en-US", { weekday: "short" });
@@ -25,7 +30,12 @@ export default function DateNavigator({ selectedDate, onDateChange, isParent }) 
         {/* Back arrow */}
         <button
           onClick={() => shift(-1)}
-          className="w-8 h-8 rounded-full flex items-center justify-center text-base text-muted-foreground hover:bg-gray-100 active:scale-90 transition-all shrink-0"
+          disabled={atEarliest}
+          className={`w-8 h-8 rounded-full flex items-center justify-center text-base transition-all shrink-0 ${
+            atEarliest
+              ? "text-gray-200 cursor-not-allowed"
+              : "text-muted-foreground hover:bg-gray-100 active:scale-90"
+          }`}
           aria-label="Previous day"
         >
           ‹
@@ -37,6 +47,7 @@ export default function DateNavigator({ selectedDate, onDateChange, isParent }) 
             const input = document.createElement("input");
             input.type = "date";
             input.value = selectedDate;
+            input.min = EARLIEST_DATE;
             input.max = today;
             input.style.cssText = "position:fixed;opacity:0;pointer-events:none";
             document.body.appendChild(input);
