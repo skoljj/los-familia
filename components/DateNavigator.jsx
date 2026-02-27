@@ -8,13 +8,14 @@ export default function DateNavigator({ selectedDate, onDateChange, isParent }) 
 
   const selected = new Date(selectedDate + "T12:00:00");
   const isPast = selectedDate < today;
+  const isFuture = selectedDate > today;
   const atEarliest = selectedDate <= EARLIEST_DATE;
 
   function shift(days) {
     const d = new Date(selected);
     d.setDate(d.getDate() + days);
     const iso = d.toISOString().split("T")[0];
-    if (iso < EARLIEST_DATE || iso > today) return;
+    if (iso < EARLIEST_DATE) return;
     onDateChange(iso);
   }
 
@@ -48,7 +49,6 @@ export default function DateNavigator({ selectedDate, onDateChange, isParent }) 
             input.type = "date";
             input.value = selectedDate;
             input.min = EARLIEST_DATE;
-            input.max = today;
             input.style.cssText = "position:fixed;opacity:0;pointer-events:none";
             document.body.appendChild(input);
             input.addEventListener("change", (e) => {
@@ -62,29 +62,31 @@ export default function DateNavigator({ selectedDate, onDateChange, isParent }) 
           className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition-all ${
             isToday
               ? "bg-blue-500 text-white"
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              : isFuture
+                ? "bg-indigo-50 text-indigo-700 hover:bg-indigo-100"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
           }`}
         >
           <span className="font-bold">{isToday ? "Today" : dayLabel}</span>
           {!isToday && <span className="text-[10px] opacity-70">{dateLabel}</span>}
         </button>
 
-        {/* Past-day badge */}
+        {/* Context badge */}
         {isPast && (
           <span className="text-[9px] text-orange-500 font-semibold tracking-wide uppercase">
             {isParent ? "edit" : "view"}
+          </span>
+        )}
+        {isFuture && (
+          <span className="text-[9px] text-indigo-400 font-semibold tracking-wide uppercase">
+            preview
           </span>
         )}
 
         {/* Forward arrow */}
         <button
           onClick={() => shift(1)}
-          disabled={selectedDate >= today}
-          className={`w-8 h-8 rounded-full flex items-center justify-center text-base transition-all shrink-0 ${
-            selectedDate >= today
-              ? "text-gray-200 cursor-not-allowed"
-              : "text-muted-foreground hover:bg-gray-100 active:scale-90"
-          }`}
+          className="w-8 h-8 rounded-full flex items-center justify-center text-base text-muted-foreground hover:bg-gray-100 active:scale-90 transition-all shrink-0"
           aria-label="Next day"
         >
           ›
