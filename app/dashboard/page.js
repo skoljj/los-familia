@@ -93,29 +93,16 @@ export default function DashboardPage() {
 
   if (!member || !family) return null;
 
-  const dateObj = new Date(selectedDate + "T12:00:00");
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50 to-white">
       <NavBar />
+      <DateNavigator
+        selectedDate={selectedDate}
+        onDateChange={setSelectedDate}
+        isParent={true}
+      />
       <main className="max-w-6xl mx-auto p-4 space-y-6">
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <div>
-            <h1 className="text-2xl font-bold">Family Dashboard</h1>
-            <p className="text-sm text-muted-foreground">
-              {dateObj.toLocaleDateString("en-US", {
-                weekday: "long",
-                month: "long",
-                day: "numeric",
-              })}
-            </p>
-          </div>
-          <DateNavigator
-            selectedDate={selectedDate}
-            onDateChange={setSelectedDate}
-            isParent={true}
-          />
-        </div>
+        <h1 className="text-2xl font-bold">Family Dashboard</h1>
 
         {/* Stats row */}
         <div className="grid grid-cols-3 gap-4">

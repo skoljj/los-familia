@@ -21,32 +21,19 @@ export default function TimelinePage() {
 
   if (!member || !family) return null;
 
-  const dateObj = new Date(selectedDate + "T12:00:00");
-  const isToday = selectedDate === new Date().toISOString().split("T")[0];
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50 to-white">
       <NavBar />
+      <DateNavigator
+        selectedDate={selectedDate}
+        onDateChange={setSelectedDate}
+        isParent={false}
+      />
       <main className="max-w-lg md:max-w-2xl lg:max-w-4xl xl:max-w-5xl mx-auto p-4 space-y-4">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">Hi, {member.name}!</h1>
-            <p className="text-sm text-muted-foreground">
-              {dateObj.toLocaleDateString("en-US", {
-                weekday: "long",
-                month: "long",
-                day: "numeric",
-              })}
-            </p>
-          </div>
+          <h1 className="text-2xl font-bold">Hi, {member.name}!</h1>
           <StarCounter count={member.star_balance} size="lg" />
         </div>
-
-        <DateNavigator
-          selectedDate={selectedDate}
-          onDateChange={setSelectedDate}
-          isParent={false}
-        />
 
         <Timeline
           key={selectedDate}
