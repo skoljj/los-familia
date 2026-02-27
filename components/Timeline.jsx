@@ -1,48 +1,74 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { getSupabaseBrowser } from "@/lib/supabase-client";
-import { buildTimeline, getCurrentSection } from "@/lib/time-utils";
-import DaySectionBar from "./DaySectionBar";
-import TaskCard from "./TaskCard";
+import { classifyBlocks, getTodayDayType } from "@/lib/time-utils";
+import ScheduleBlockCard from "./ScheduleBlockCard";
 
 export default function Timeline({ memberId, familyId, isParent = false }) {
-  const [sections, setSections] = useState([]);
+  const [blocks, setBlocks] = useState([]);
   const [tasks, setTasks] = useState([]);
+  const [templateName, setTemplateName] = useState("");
   const [now, setNow] = useState(new Date());
-
-  const supabase = getSupabaseBrowser();
+  const nowBlockRef = useRef(null);
 
   const loadData = useCallback(async () => {
-    const [{ data: sectionData }, { data: taskData }] = await Promise.all([
+    const supabase = getSupabaseBrowser();
+    if (!supabase) return;
+
+    const todayType = getTodayDayType();
+    const today = new Date().toISOString().split("T")[0];
+
+    const { data: templates } = await supabase
+      .from("schedule_templates")
+      .select("*")
+      .eq("assigned_to", memberId)
+      .contains("day_types", [todayType]);
+
+    const template = templates?.[0];
+
+    if (!template) {
+      setBlocks([]);
+      setTasks([]);
+      setTemplateName("");
+      return;
+    }
+
+    setTemplateName(template.name);
+
+    const [{ data: blockData }, { data: taskData }] = await Promise.all([
       supabase
-        .from("day_sections")
+        .from("schedule_blocks")
         .select("*")
-        .eq("family_id", familyId)
-        .order("start_time"),
+        .eq("template_id", template.id)
+        .order("sort_order"),
       supabase
         .from("tasks")
         .select("*")
         .eq("assigned_to", memberId)
-        .eq("task_date", new Date().toISOString().split("T")[0])
+        .eq("task_date", today)
         .order("sort_order"),
     ]);
-    if (sectionData) setSections(sectionData);
+
+    if (blockData) setBlocks(blockData);
     if (taskData) setTasks(taskData);
-  }, [supabase, familyId, memberId]);
+  }, [memberId]);
 
   useEffect(() => {
     loadData();
   }, [loadData]);
 
   useEffect(() => {
-    const timer = setInterval(() => setNow(new Date()), 1000);
+    const timer = setInterval(() => setNow(new Date()), 30000);
     return () => clearInterval(timer);
   }, []);
 
   useEffect(() => {
+    const supabase = getSupabaseBrowser();
+    if (!supabase) return;
+
     const channel = supabase
-      .channel(`tasks-${memberId}`)
+      .channel(`timeline-${memberId}`)
       .on(
         "postgres_changes",
         {
@@ -56,21 +82,38 @@ export default function Timeline({ memberId, familyId, isParent = false }) {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      const sb = getSupabaseBrowser();
+      if (sb) sb.removeChannel(channel);
     };
-  }, [supabase, memberId, loadData]);
+  }, [memberId, loadData]);
 
-  const currentSection = getCurrentSection(sections, now);
+  useEffect(() => {
+    if (nowBlockRef.current) {
+      nowBlockRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }
+  }, [blocks.length]);
 
-  const sectionTasks = tasks.filter(
-    (t) => currentSection && t.day_section === currentSection.label
-  );
+  const classifiedBlocks = classifyBlocks(blocks, now);
 
-  const timeline = currentSection
-    ? buildTimeline(sectionTasks, currentSection.start_time, now)
-    : [];
+  const tasksByBlock = {};
+  const unattachedTasks = [];
+  for (const task of tasks) {
+    if (task.schedule_block_id) {
+      if (!tasksByBlock[task.schedule_block_id]) {
+        tasksByBlock[task.schedule_block_id] = [];
+      }
+      tasksByBlock[task.schedule_block_id].push(task);
+    } else {
+      unattachedTasks.push(task);
+    }
+  }
 
   async function handleMarkDone(taskId) {
+    const supabase = getSupabaseBrowser();
+    if (!supabase) return;
     await supabase
       .from("tasks")
       .update({ status: "done", completed_at: new Date().toISOString() })
@@ -79,15 +122,14 @@ export default function Timeline({ memberId, familyId, isParent = false }) {
   }
 
   async function handleAccept(taskId) {
+    const supabase = getSupabaseBrowser();
+    if (!supabase) return;
     const task = tasks.find((t) => t.id === taskId);
     if (!task) return;
 
     await supabase
       .from("tasks")
-      .update({
-        status: "accepted",
-        accepted_at: new Date().toISOString(),
-      })
+      .update({ status: "accepted", accepted_at: new Date().toISOString() })
       .eq("id", taskId);
 
     await supabase.from("star_ledger").insert({
@@ -104,37 +146,94 @@ export default function Timeline({ memberId, familyId, isParent = false }) {
     loadData();
   }
 
-  if (!currentSection) {
+  if (classifiedBlocks.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-        <p className="text-lg">No active section right now</p>
-        <p className="text-sm mt-1">Check back during a scheduled section</p>
+        <p className="text-lg">No schedule for today</p>
+        <p className="text-sm mt-1">
+          No template matches today. Ask a parent to set one up.
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      <DaySectionBar section={currentSection} now={now} />
+    <div className="space-y-3">
+      {templateName && (
+        <p className="text-xs text-muted-foreground text-center uppercase tracking-wider font-medium">
+          {templateName} Schedule
+        </p>
+      )}
 
-      <div className="space-y-3">
-        {timeline.map((item) => (
-          <TaskCard
-            key={item.id}
-            task={item}
-            phase={item.phase}
-            remainingMs={item.remainingMs}
+      {classifiedBlocks.map((block) => (
+        <div
+          key={block.id}
+          ref={block.phase === "now" ? nowBlockRef : null}
+        >
+          <ScheduleBlockCard
+            block={block}
+            tasks={tasksByBlock[block.id] || []}
             isParent={isParent}
             onMarkDone={handleMarkDone}
             onAccept={handleAccept}
+            defaultExpanded={block.phase === "now" || block.phase === "next"}
           />
-        ))}
-      </div>
+        </div>
+      ))}
 
-      {timeline.length === 0 && (
-        <p className="text-center text-muted-foreground py-8">
-          No tasks for this section
-        </p>
+      {/* Bonus / unattached tasks */}
+      {unattachedTasks.length > 0 && (
+        <div className="rounded-2xl border bg-gradient-to-r from-amber-50 to-yellow-50 p-4 mt-4">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-2xl">🏆</span>
+            <h3 className="font-semibold text-sm">Bonus Tasks</h3>
+          </div>
+          <div className="space-y-2">
+            {unattachedTasks.map((task, i) => (
+              <div
+                key={task.id}
+                className={`flex items-center justify-between p-3 rounded-xl ${
+                  task.status === "accepted"
+                    ? "bg-emerald-50 border border-emerald-200"
+                    : task.status === "done"
+                      ? "bg-amber-100/50 border border-amber-200"
+                      : "bg-white border border-amber-100"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl">{task.icon || "⭐"}</span>
+                  <div>
+                    <p className="font-medium text-sm">{task.title}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {"⭐".repeat(Math.min(task.star_value, 5))} {task.star_value}
+                    </p>
+                  </div>
+                </div>
+                <div>
+                  {task.status === "pending" && !isParent && (
+                    <button
+                      onClick={() => handleMarkDone(task.id)}
+                      className="w-10 h-10 rounded-full border-3 border-gray-300 bg-white active:scale-90 transition-transform"
+                    />
+                  )}
+                  {task.status === "done" && isParent && (
+                    <button
+                      onClick={() => handleAccept(task.id)}
+                      className="w-10 h-10 rounded-full border-3 border-amber-400 bg-amber-100 flex items-center justify-center text-amber-600 font-bold active:scale-90 transition-transform"
+                    >
+                      ✓
+                    </button>
+                  )}
+                  {task.status === "accepted" && (
+                    <div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-white font-bold">
+                      ✓
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );

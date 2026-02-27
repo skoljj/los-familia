@@ -1,86 +1,111 @@
 "use client";
 
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import CountdownTimer from "./CountdownTimer";
 import { minutesToDisplay } from "@/lib/time-utils";
-
-const PHASE_STYLES = {
-  done: "border-l-4 border-l-emerald-400 opacity-70",
-  now: "border-l-4 border-l-blue-500 ring-2 ring-blue-200",
-  next: "border-l-4 border-l-amber-400",
-  later: "border-l-4 border-l-muted",
-};
-
-const PHASE_LABELS = {
-  done: "Done",
-  now: "Now",
-  next: "Next",
-  later: "Later",
-};
 
 export default function TaskCard({
   task,
-  phase,
-  remainingMs,
+  index,
   isParent,
   onMarkDone,
   onAccept,
 }) {
-  const stars = Array(task.star_value).fill("\u2B50");
+  const isDone = task.status === "done" || task.status === "accepted";
+  const isAccepted = task.status === "accepted";
+  const awaitingAccept = task.status === "done" && isParent;
+  const isParentInput = task.input_type === "parent";
 
   return (
-    <Card className={`transition-all ${PHASE_STYLES[phase] || ""}`}>
-      <CardContent className="flex items-center gap-4 p-4">
+    <div
+      className={`relative rounded-2xl p-4 transition-all ${
+        isAccepted
+          ? "bg-emerald-50 border border-emerald-200"
+          : task.status === "done"
+            ? "bg-amber-50 border border-amber-200"
+            : isParentInput
+              ? "bg-purple-50/60 border border-purple-100"
+              : "bg-blue-50/60 border border-blue-100"
+      }`}
+    >
+      {/* Emoji icon */}
+      <div className="flex justify-center mb-2">
+        <span className="text-4xl">{task.icon || "📋"}</span>
+      </div>
+
+      {/* Task title with number */}
+      <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <Badge
-              variant={phase === "now" ? "default" : "outline"}
-              className="text-xs shrink-0"
-            >
-              {PHASE_LABELS[phase] || phase}
-            </Badge>
-            <span className="font-medium truncate">{task.title}</span>
+          <p className={`font-medium ${isDone ? "line-through opacity-60" : ""}`}>
+            {index != null ? `${String(index + 1).padStart(2, "0")}. ` : ""}
+            {task.title}
+          </p>
+          <div className="flex items-center gap-2 mt-1">
+            {isParentInput && (
+              <span className="text-[10px] uppercase tracking-wide text-purple-600 font-medium">
+                Parent
+              </span>
+            )}
+            {task.star_value > 0 && (
+              <span className="text-xs text-muted-foreground flex items-center gap-0.5">
+                {"⭐".repeat(Math.min(task.star_value, 5))}
+                {task.star_value > 1 && (
+                  <span className="ml-0.5">{task.star_value}</span>
+                )}
+              </span>
+            )}
+            {task.time_allowed_minutes > 0 && (
+              <span className="text-xs text-muted-foreground">
+                {minutesToDisplay(task.time_allowed_minutes)}
+              </span>
+            )}
           </div>
-
-          <div className="flex items-center gap-3 text-sm text-muted-foreground">
-            <span>{minutesToDisplay(task.time_allowed_minutes)}</span>
-            <span>{stars.join("")}</span>
-          </div>
+          {task.description && (
+            <p className="text-xs text-muted-foreground mt-1 italic">
+              {task.description}
+            </p>
+          )}
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
-          {phase === "now" && remainingMs != null && (
-            <CountdownTimer remainingMs={remainingMs} />
-          )}
-
-          {phase === "now" && task.status === "pending" && !isParent && (
-            <Button
-              size="sm"
-              variant="outline"
-              className="min-w-[4rem] h-12 text-base"
-              onClick={() => onMarkDone?.(task.id)}
-            >
-              Done!
-            </Button>
-          )}
-
-          {task.status === "done" && isParent && (
-            <Button
-              size="sm"
-              className="min-w-[5rem] h-12 text-base bg-emerald-600 hover:bg-emerald-700"
+        {/* Toggle circle */}
+        <div className="shrink-0 pt-1">
+          {awaitingAccept ? (
+            <button
               onClick={() => onAccept?.(task.id)}
+              className="w-10 h-10 rounded-full border-3 border-amber-400 bg-amber-100 flex items-center justify-center text-amber-600 font-bold text-lg active:scale-90 transition-transform"
+              title="Accept & award stars"
             >
-              Accept
-            </Button>
-          )}
-
-          {task.status === "accepted" && (
-            <span className="text-emerald-600 font-bold text-lg">&#10003;</span>
+              ✓
+            </button>
+          ) : isAccepted ? (
+            <div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-white font-bold text-lg">
+              ✓
+            </div>
+          ) : task.status === "done" ? (
+            <div className="w-10 h-10 rounded-full border-3 border-blue-300 bg-blue-100 flex items-center justify-center">
+              <div className="w-5 h-5 rounded-full bg-blue-400" />
+            </div>
+          ) : isParentInput && !isParent ? (
+            <div className="w-10 h-10 rounded-full border-3 border-purple-200 bg-purple-50 flex items-center justify-center">
+              <span className="text-purple-300 text-sm">🔒</span>
+            </div>
+          ) : isParentInput && isParent ? (
+            <button
+              onClick={() => onMarkDone?.(task.id)}
+              className="w-10 h-10 rounded-full border-3 border-purple-400 bg-white flex items-center justify-center active:scale-90 transition-transform cursor-pointer hover:border-purple-500"
+            >
+              <div className="w-0 h-0" />
+            </button>
+          ) : (
+            <button
+              onClick={() => !isParent && onMarkDone?.(task.id)}
+              className={`w-10 h-10 rounded-full border-3 border-gray-300 bg-white flex items-center justify-center active:scale-90 transition-transform ${
+                isParent ? "cursor-default" : "cursor-pointer hover:border-blue-400"
+              }`}
+            >
+              <div className="w-0 h-0" />
+            </button>
           )}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
