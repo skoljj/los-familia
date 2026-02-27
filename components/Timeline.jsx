@@ -187,12 +187,16 @@ export default function Timeline({ memberId, familyId, isParent = false, date })
       updatedMetadata.selected = value;
     }
 
+    const selectedOpt = (task.metadata?.options || []).find((o) => o.value === value);
+    const earnedPoints = isDeselecting ? 0 : (selectedOpt?.points ?? 0);
+
     await supabase
       .from("tasks")
       .update({
         metadata: updatedMetadata,
         status: isDeselecting ? "pending" : "done",
         completed_at: isDeselecting ? null : new Date().toISOString(),
+        star_value: earnedPoints,
       })
       .eq("id", taskId);
     loadData();

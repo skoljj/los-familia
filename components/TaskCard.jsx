@@ -131,19 +131,33 @@ export default function TaskCard({
   );
 }
 
+const VALUE_COLORS = {
+  green:   { bg: "bg-emerald-50 border border-emerald-200", btn: "bg-emerald-600 text-white shadow-md ring-2 ring-emerald-300" },
+  on_time: { bg: "bg-emerald-50 border border-emerald-200", btn: "bg-emerald-600 text-white shadow-md ring-2 ring-emerald-300" },
+  yellow:  { bg: "bg-amber-50 border border-amber-200",     btn: "bg-amber-500 text-white shadow-md ring-2 ring-amber-300" },
+  ok:      { bg: "bg-amber-50 border border-amber-200",     btn: "bg-amber-500 text-white shadow-md ring-2 ring-amber-300" },
+  red:     { bg: "bg-red-50 border border-red-200",         btn: "bg-red-600 text-white shadow-md ring-2 ring-red-300" },
+  late:    { bg: "bg-red-50 border border-red-200",         btn: "bg-red-600 text-white shadow-md ring-2 ring-red-300" },
+  unknown: { bg: "bg-gray-50 border border-gray-200",       btn: "bg-gray-500 text-white shadow-md ring-2 ring-gray-300" },
+};
+const DEFAULT_SELECTED = { bg: "bg-gray-50 border border-gray-200", btn: "bg-purple-600 text-white shadow-md ring-2 ring-purple-300" };
+
 function PicklistCard({ task, index, isParent, options, selectedValue, onSelect }) {
   const selectedOption = options.find((o) => o.value === selectedValue);
   const hasSelection = !!selectedValue;
+  const hasPoints = options.some((o) => o.points != null);
 
-  const bgColor = hasSelection
-    ? selectedValue === "on_time"
-      ? "bg-emerald-50 border border-emerald-200"
-      : selectedValue === "ok"
-        ? "bg-amber-50 border border-amber-200"
-        : selectedValue === "late"
-          ? "bg-red-50 border border-red-200"
-          : "bg-gray-50 border border-gray-200"
-    : "bg-purple-50/60 border border-purple-100";
+  const palette = hasSelection
+    ? VALUE_COLORS[selectedValue] || DEFAULT_SELECTED
+    : null;
+  const bgColor = palette?.bg || "bg-purple-50/60 border border-purple-100";
+
+  function btnClass(opt) {
+    if (selectedValue !== opt.value) {
+      return "bg-white border border-purple-200 text-purple-800 hover:border-purple-400";
+    }
+    return (VALUE_COLORS[opt.value] || DEFAULT_SELECTED).btn;
+  }
 
   return (
     <div className={`relative rounded-2xl md:rounded-xl transition-all ${bgColor}`}>
@@ -158,19 +172,18 @@ function PicklistCard({ task, index, isParent, options, selectedValue, onSelect 
         </p>
 
         {isParent ? (
-          <div className="grid grid-cols-2 gap-2">
+          <div className={`grid ${options.length <= 3 ? "grid-cols-3" : "grid-cols-2"} gap-2`}>
             {options.map((opt) => (
               <button
                 key={opt.value}
                 onClick={() => onSelect?.(task.id, opt.value)}
-                className={`flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-all active:scale-95 ${
-                  selectedValue === opt.value
-                    ? "bg-purple-600 text-white shadow-md ring-2 ring-purple-300"
-                    : "bg-white border border-purple-200 text-purple-800 hover:border-purple-400"
-                }`}
+                className={`flex flex-col items-center gap-1 px-2 py-2.5 rounded-xl text-sm font-medium transition-all active:scale-95 ${btnClass(opt)}`}
               >
-                <span>{opt.emoji}</span>
-                <span className="truncate">{opt.label}</span>
+                <span className="text-lg">{opt.emoji}</span>
+                <span className="text-xs truncate">{opt.label}</span>
+                {opt.points != null && (
+                  <span className="text-[10px] opacity-70">{opt.points} pts</span>
+                )}
               </button>
             ))}
           </div>
@@ -180,6 +193,9 @@ function PicklistCard({ task, index, isParent, options, selectedValue, onSelect 
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/80 border">
                 <span className="text-lg">{selectedOption?.emoji}</span>
                 <span className="font-semibold text-sm">{selectedOption?.label}</span>
+                {selectedOption?.points != null && (
+                  <span className="text-xs opacity-60">+{selectedOption.points}</span>
+                )}
               </div>
             ) : (
               <div className="flex items-center justify-center gap-1.5 text-purple-300">
@@ -216,12 +232,8 @@ function PicklistCard({ task, index, isParent, options, selectedValue, onSelect 
               <button
                 key={opt.value}
                 onClick={() => onSelect?.(task.id, opt.value)}
-                title={opt.label}
-                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all active:scale-95 ${
-                  selectedValue === opt.value
-                    ? "bg-purple-600 text-white shadow ring-1 ring-purple-300"
-                    : "bg-white border border-purple-200 text-purple-700 hover:border-purple-400"
-                }`}
+                title={`${opt.label}${opt.points != null ? ` (${opt.points} pts)` : ""}`}
+                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all active:scale-95 ${btnClass(opt)}`}
               >
                 <span>{opt.emoji}</span>
                 <span className="hidden lg:inline">{opt.label}</span>
@@ -234,6 +246,9 @@ function PicklistCard({ task, index, isParent, options, selectedValue, onSelect 
               <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-white/80 border text-xs font-semibold">
                 <span>{selectedOption?.emoji}</span>
                 {selectedOption?.label}
+                {selectedOption?.points != null && (
+                  <span className="opacity-60 ml-1">+{selectedOption.points}</span>
+                )}
               </span>
             ) : (
               <div className="w-9 h-9 rounded-full border-3 border-purple-200 bg-purple-50 flex items-center justify-center">
