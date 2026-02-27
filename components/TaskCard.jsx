@@ -214,45 +214,52 @@ function PicklistCard({ task, index, isParent, options, selectedValue, onSelect 
       </div>
 
       {/* Landscape */}
-      <div className="hidden md:flex items-center gap-3 px-3 py-2.5">
-        <span className="text-2xl shrink-0">{task.icon || "📋"}</span>
-        <div className="flex-1 min-w-0">
+      <div className="hidden md:block px-3 py-2.5">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-xl shrink-0">{task.icon || "📋"}</span>
           <p className="font-medium text-sm leading-tight">
             {index != null ? `${String(index + 1).padStart(2, "0")}. ` : ""}
             {task.title}
           </p>
-          <span className="text-[10px] uppercase tracking-wide text-purple-600 font-medium">
+          <span className="text-[10px] uppercase tracking-wide text-purple-600 font-medium shrink-0">
             Parent
           </span>
         </div>
 
         {isParent ? (
-          <div className="flex items-center gap-1.5 shrink-0">
-            {options.map((opt) => (
-              <button
-                key={opt.value}
-                onClick={() => onSelect?.(task.id, opt.value)}
-                title={`${opt.label}${opt.points != null ? ` (${opt.points} pts)` : ""}`}
-                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all active:scale-95 ${btnClass(opt)}`}
-              >
-                <span>{opt.emoji}</span>
-                <span className="hidden lg:inline">{opt.label}</span>
-              </button>
-            ))}
+          <div className="flex flex-wrap gap-1.5">
+            {options.map((opt) => {
+              const isSelected = selectedValue === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  onClick={() => onSelect?.(task.id, opt.value)}
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all active:scale-95 ${btnClass(opt)}`}
+                >
+                  <span className="text-sm">{opt.emoji}</span>
+                  <span>{opt.label}</span>
+                  {opt.points != null && (
+                    <span className="opacity-70 text-[10px]">({opt.points})</span>
+                  )}
+                  {isSelected && <span className="ml-0.5">✓</span>}
+                </button>
+              );
+            })}
           </div>
         ) : (
-          <div className="shrink-0">
+          <div>
             {hasSelection ? (
-              <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-white/80 border text-xs font-semibold">
-                <span>{selectedOption?.emoji}</span>
+              <span className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white/80 border text-xs font-semibold">
+                <span className="text-sm">{selectedOption?.emoji}</span>
                 {selectedOption?.label}
                 {selectedOption?.points != null && (
-                  <span className="opacity-60 ml-1">+{selectedOption.points}</span>
+                  <span className="opacity-60">+{selectedOption.points}</span>
                 )}
               </span>
             ) : (
-              <div className="w-9 h-9 rounded-full border-3 border-purple-200 bg-purple-50 flex items-center justify-center">
-                <span className="text-purple-300 text-sm">🔒</span>
+              <div className="flex items-center gap-1.5 text-purple-300">
+                <span className="text-sm">🔒</span>
+                <span className="text-xs italic">Waiting for parent</span>
               </div>
             )}
           </div>
