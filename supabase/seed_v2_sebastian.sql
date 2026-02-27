@@ -24,7 +24,7 @@ insert into schedule_blocks (id, template_id, label, emoji, start_time, end_time
   ('c0000000-0000-0000-0000-000000000009', '10000000-0000-0000-0000-000000000001', 'Entertainment Screen Time', '🎮', '15:30', '16:00', 'free_time',  9),
   ('c0000000-0000-0000-0000-000000000010', '10000000-0000-0000-0000-000000000001', 'Educational Tablet Time',   '📱', '16:00', '16:30', 'activity',  10),
   ('c0000000-0000-0000-0000-000000000011', '10000000-0000-0000-0000-000000000001', 'Physical Activity',         '🏃', '16:30', '17:00', 'activity',  11),
-  ('c0000000-0000-0000-0000-000000000012', '10000000-0000-0000-0000-000000000001', 'Daily Chore',               '🧹', '17:00', '17:10', 'routine',   12),
+  ('c0000000-0000-0000-0000-000000000012', '10000000-0000-0000-0000-000000000001', 'Daily Chores',              '🧹', '17:00', '17:10', 'routine',   12),
   ('c0000000-0000-0000-0000-000000000013', '10000000-0000-0000-0000-000000000001', 'Flex Time',                 '🎨', '17:10', '18:00', 'free_time', 13),
   ('c0000000-0000-0000-0000-000000000014', '10000000-0000-0000-0000-000000000001', 'Dinner',                    '🍽️','18:00', '18:45', 'routine',   14),
   ('c0000000-0000-0000-0000-000000000015', '10000000-0000-0000-0000-000000000001', 'Bath & Hygiene',            '🛁', '18:45', '19:05', 'routine',   15),
@@ -60,9 +60,9 @@ insert into tasks (family_id, assigned_to, title, icon, schedule_block_id, day_s
   ('a0000000-0000-0000-0000-000000000001', 'b0000000-0000-0000-0000-000000000003', 'Put backpack & school stuff away','🎒','c0000000-0000-0000-0000-000000000008', 'afternoon', 5, 1, 1, 'weekdays', current_date),
   ('a0000000-0000-0000-0000-000000000001', 'b0000000-0000-0000-0000-000000000003', 'Bathroom + Wash hands',     '🙌', 'c0000000-0000-0000-0000-000000000008', 'afternoon', 5, 2, 1, 'weekdays', current_date);
 
--- Daily Chore block
+-- Daily Chores block
 insert into tasks (family_id, assigned_to, title, icon, schedule_block_id, day_section, time_allowed_minutes, sort_order, star_value, repeat, task_date) values
-  ('a0000000-0000-0000-0000-000000000001', 'b0000000-0000-0000-0000-000000000003', 'Daily chore',               '🧹', 'c0000000-0000-0000-0000-000000000012', 'evening', 10, 1, 1, 'weekdays', current_date);
+  ('a0000000-0000-0000-0000-000000000001', 'b0000000-0000-0000-0000-000000000003', 'Put dishes away from dishwasher', '🍽️', 'c0000000-0000-0000-0000-000000000012', 'evening', 10, 1, 1, 'weekdays', current_date);
 
 -- Dinner block
 insert into tasks (family_id, assigned_to, title, icon, schedule_block_id, day_section, time_allowed_minutes, sort_order, star_value, repeat, task_date) values

@@ -750,7 +750,7 @@ const SCENE_MAP = {
   "Transition / Put Things Away": PutAwayScene,
   "Screen Time": ScreenTimeScene,
   "Physical Fun": PhysicalFunScene,
-  "Daily Chore": DailyChoreScene,
+  "Daily Chores": DailyChoreScene,
   "Kids Choice": KidsChoiceScene,
   Dinner: DinnerScene,
   "Night Hygiene": NightHygieneScene,
