@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
+import { localDateString } from "@/lib/time-utils";
 import NavBar from "@/components/NavBar";
 import Timeline from "@/components/Timeline";
 import StarCounter from "@/components/StarCounter";
@@ -11,9 +12,7 @@ import DateNavigator from "@/components/DateNavigator";
 export default function TimelinePage() {
   const { member, family, loading } = useAuth();
   const router = useRouter();
-  const [selectedDate, setSelectedDate] = useState(
-    new Date().toISOString().split("T")[0]
-  );
+  const [selectedDate, setSelectedDate] = useState(() => localDateString());
 
   useEffect(() => {
     if (!loading && !member) router.replace("/login");

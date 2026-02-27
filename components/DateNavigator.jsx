@@ -1,9 +1,11 @@
 "use client";
 
+import { localDateString } from "@/lib/time-utils";
+
 const EARLIEST_DATE = "2026-02-26";
 
 export default function DateNavigator({ selectedDate, onDateChange, isParent }) {
-  const today = new Date().toISOString().split("T")[0];
+  const today = localDateString();
   const isToday = selectedDate === today;
 
   const selected = new Date(selectedDate + "T12:00:00");
@@ -14,7 +16,7 @@ export default function DateNavigator({ selectedDate, onDateChange, isParent }) 
   function shift(days) {
     const d = new Date(selected);
     d.setDate(d.getDate() + days);
-    const iso = d.toISOString().split("T")[0];
+    const iso = localDateString(d);
     if (iso < EARLIEST_DATE) return;
     onDateChange(iso);
   }

@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
+import { localDateString } from "@/lib/time-utils";
 import { getSupabaseBrowser } from "@/lib/supabase-client";
 import NavBar from "@/components/NavBar";
 import Timeline from "@/components/Timeline";
@@ -17,9 +18,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const [children, setChildren] = useState([]);
   const [selectedChild, setSelectedChild] = useState(null);
-  const [selectedDate, setSelectedDate] = useState(
-    new Date().toISOString().split("T")[0]
-  );
+  const [selectedDate, setSelectedDate] = useState(() => localDateString());
   const [stats, setStats] = useState({ totalTasks: 0, completed: 0, accepted: 0 });
 
   useEffect(() => {

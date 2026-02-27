@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { getSupabaseBrowser } from "@/lib/supabase-client";
-import { classifyBlocks, getTodayDayType } from "@/lib/time-utils";
+import { classifyBlocks, getTodayDayType, localDateString } from "@/lib/time-utils";
 import ScheduleBlockCard from "./ScheduleBlockCard";
 
 export default function Timeline({ memberId, familyId, isParent = false, date }) {
@@ -13,7 +13,7 @@ export default function Timeline({ memberId, familyId, isParent = false, date })
   const nowBlockRef = useRef(null);
   const spawnedRef = useRef(false);
 
-  const today = new Date().toISOString().split("T")[0];
+  const today = localDateString();
   const viewDate = date || today;
   const isViewingPast = viewDate < today;
   const isViewingToday = viewDate === today;
