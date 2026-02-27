@@ -178,13 +178,21 @@ export default function Timeline({ memberId, familyId, isParent = false, date })
     const task = tasks.find((t) => t.id === taskId);
     if (!task) return;
 
-    const updatedMetadata = { ...task.metadata, selected: value };
+    const isDeselecting = task.metadata?.selected === value;
+    const updatedMetadata = { ...task.metadata };
+
+    if (isDeselecting) {
+      delete updatedMetadata.selected;
+    } else {
+      updatedMetadata.selected = value;
+    }
+
     await supabase
       .from("tasks")
       .update({
         metadata: updatedMetadata,
-        status: "done",
-        completed_at: new Date().toISOString(),
+        status: isDeselecting ? "pending" : "done",
+        completed_at: isDeselecting ? null : new Date().toISOString(),
       })
       .eq("id", taskId);
     loadData();
