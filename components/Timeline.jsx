@@ -12,6 +12,8 @@ export default function Timeline({ memberId, familyId, isParent = false }) {
   const [now, setNow] = useState(new Date());
   const nowBlockRef = useRef(null);
 
+  const spawnedRef = useRef(false);
+
   const loadData = useCallback(async () => {
     const supabase = getSupabaseBrowser();
     if (!supabase) return;
@@ -51,6 +53,30 @@ export default function Timeline({ memberId, familyId, isParent = false }) {
     ]);
 
     if (blockData) setBlocks(blockData);
+
+    if ((!taskData || taskData.length === 0) && !spawnedRef.current) {
+      spawnedRef.current = true;
+      try {
+        const res = await fetch("/api/tasks/spawn", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ date: today }),
+        });
+        if (res.ok) {
+          const { data: freshTasks } = await supabase
+            .from("tasks")
+            .select("*")
+            .eq("assigned_to", memberId)
+            .eq("task_date", today)
+            .order("sort_order");
+          if (freshTasks) setTasks(freshTasks);
+          return;
+        }
+      } catch {
+        // spawn failed — fall through with empty tasks
+      }
+    }
+
     if (taskData) setTasks(taskData);
   }, [memberId]);
 
