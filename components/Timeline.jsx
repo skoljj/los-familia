@@ -322,7 +322,10 @@ export default function Timeline({ memberId, familyId, isParent = false, date })
               defaultExpanded={
                 isViewingPast
                   ? true
-                  : block.phase === "now" || block.phase === "next"
+                  : block.phase === "now" || block.phase === "next" ||
+                    (block.phase === "past" && isParent && (tasksByBlock[block.id] || []).some(
+                      (t) => t.metadata?.type === "picklist" && !t.metadata?.selected
+                    ))
               }
             />
           </div>

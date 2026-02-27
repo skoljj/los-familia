@@ -803,6 +803,10 @@ export default function ImmersiveBlockCard({
   const isNext = block.phase === "next";
   const isReview = block.phase === "review";
 
+  const hasPendingPicklist = tasks?.some(
+    (t) => t.metadata?.type === "picklist" && !t.metadata?.selected
+  );
+
   const SceneComponent = SCENE_MAP[block.label];
 
   /* ── Scene hero ──────────────────────────────────────────── */
@@ -891,7 +895,9 @@ export default function ImmersiveBlockCard({
 
   /* ── Phase ring styles ───────────────────────────────────── */
   const phaseRing = isPast
-    ? "opacity-40"
+    ? hasPendingPicklist
+      ? "ring-2 ring-purple-300/60 shadow-lg opacity-95"
+      : "opacity-40"
     : isReview
       ? "shadow-md opacity-90"
       : isNow
