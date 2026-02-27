@@ -784,6 +784,7 @@ export default function ImmersiveBlockCard({
   tasks,
   yotoPrereqs,
   isParent,
+  pastDayEdit = false,
   onMarkDone,
   onUndo,
   onAccept,
@@ -882,6 +883,7 @@ export default function ImmersiveBlockCard({
             task={task}
             index={i}
             isParent={isParent}
+            pastDayEdit={pastDayEdit}
             onMarkDone={onMarkDone}
             onUndo={onUndo}
             onAccept={onAccept}
@@ -938,6 +940,7 @@ export default function ImmersiveBlockCard({
                   task={task}
                   index={i}
                   isParent={isParent}
+                  pastDayEdit={pastDayEdit}
                   onMarkDone={onMarkDone}
                   onUndo={onUndo}
                   onAccept={onAccept}

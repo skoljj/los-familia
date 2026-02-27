@@ -6,6 +6,7 @@ export default function TaskCard({
   task,
   index,
   isParent,
+  pastDayEdit = false,
   onMarkDone,
   onUndo,
   onAccept,
@@ -16,6 +17,7 @@ export default function TaskCard({
   const isAccepted = task.status === "accepted";
   const awaitingAccept = task.status === "done" && isParent;
   const isParentInput = task.input_type === "parent";
+  const canToggle = !isParent || pastDayEdit;
 
   const isPicklist = task.metadata?.type === "picklist";
   const picklistOptions = task.metadata?.options || [];
@@ -64,11 +66,11 @@ export default function TaskCard({
         </button>
       ) : task.status === "done" ? (
         <button
-          onClick={() => !isParent && onUndo?.(task.id)}
+          onClick={() => canToggle && onUndo?.(task.id)}
           className={`w-10 h-10 md:w-9 md:h-9 rounded-full border-3 border-blue-300 bg-blue-100 flex items-center justify-center active:scale-90 transition-transform ${
-            isParent ? "cursor-default" : "cursor-pointer"
+            canToggle ? "cursor-pointer" : "cursor-default"
           }`}
-          title={!isParent ? "Undo" : ""}
+          title={canToggle ? "Undo" : ""}
         >
           <div className="w-5 h-5 md:w-4 md:h-4 rounded-full bg-blue-400" />
         </button>
@@ -85,9 +87,9 @@ export default function TaskCard({
         </button>
       ) : (
         <button
-          onClick={() => !isParent && onMarkDone?.(task.id)}
+          onClick={() => canToggle && onMarkDone?.(task.id)}
           className={`w-10 h-10 md:w-9 md:h-9 rounded-full border-3 border-gray-300 bg-white flex items-center justify-center active:scale-90 transition-transform ${
-            isParent ? "cursor-default" : "cursor-pointer hover:border-blue-400"
+            canToggle ? "cursor-pointer hover:border-blue-400" : "cursor-default"
           }`}
         >
           <div className="w-0 h-0" />

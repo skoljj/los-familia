@@ -314,6 +314,7 @@ export default function Timeline({ memberId, familyId, isParent = false, date })
               tasks={tasksByBlock[block.id] || []}
               yotoPrereqs={yotoPrereqs}
               isParent={effectiveParent}
+              pastDayEdit={isViewingPast && isParent}
               onMarkDone={childCanInteract || effectiveParent ? handleMarkDone : undefined}
               onUndo={childCanInteract || effectiveParent ? handleUndo : undefined}
               onAccept={effectiveParent ? handleAccept : undefined}

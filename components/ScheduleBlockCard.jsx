@@ -8,6 +8,7 @@ export default function ScheduleBlockCard({
   tasks,
   yotoPrereqs,
   isParent,
+  pastDayEdit = false,
   onMarkDone,
   onUndo,
   onAccept,
@@ -25,6 +26,7 @@ export default function ScheduleBlockCard({
       tasks={tasks}
       yotoPrereqs={yotoPrereqs}
       isParent={isParent}
+      pastDayEdit={pastDayEdit}
       onMarkDone={onMarkDone}
       onUndo={onUndo}
       onAccept={onAccept}
