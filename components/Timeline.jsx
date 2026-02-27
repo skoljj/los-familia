@@ -200,23 +200,34 @@ export default function Timeline({ memberId, familyId, isParent = false }) {
         </p>
       )}
 
-      {classifiedBlocks.map((block) => (
-        <div
-          key={block.id}
-          ref={block.phase === "now" ? nowBlockRef : null}
-        >
-          <ScheduleBlockCard
-            block={block}
-            tasks={tasksByBlock[block.id] || []}
-            isParent={isParent}
-            onMarkDone={handleMarkDone}
-            onUndo={handleUndo}
-            onAccept={handleAccept}
-            onUnaccept={handleUnaccept}
-            defaultExpanded={block.phase === "now" || block.phase === "next"}
-          />
-        </div>
-      ))}
+      {classifiedBlocks.map((block) => {
+        const wakeBlock = classifiedBlocks.find(
+          (b) => b.label === "Wake Up Routine"
+        );
+        const morningTasks =
+          block.label === "Breakfast" && wakeBlock
+            ? tasksByBlock[wakeBlock.id] || []
+            : undefined;
+
+        return (
+          <div
+            key={block.id}
+            ref={block.phase === "now" ? nowBlockRef : null}
+          >
+            <ScheduleBlockCard
+              block={block}
+              tasks={tasksByBlock[block.id] || []}
+              morningTasks={morningTasks}
+              isParent={isParent}
+              onMarkDone={handleMarkDone}
+              onUndo={handleUndo}
+              onAccept={handleAccept}
+              onUnaccept={handleUnaccept}
+              defaultExpanded={block.phase === "now" || block.phase === "next"}
+            />
+          </div>
+        );
+      })}
 
       {/* Bonus / unattached tasks */}
       {unattachedTasks.length > 0 && (
