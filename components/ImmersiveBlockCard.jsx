@@ -413,6 +413,94 @@ export default function ImmersiveBlockCard({
   const isNow = block.phase === "now";
   const isNext = block.phase === "next";
 
+  const heroContent = (
+    <>
+      <SceneElements scene={theme.scene} />
+
+      <div className="relative z-10 flex items-start justify-between">
+        <div className="flex-1">
+          <div className={`${theme.heroSize} md:text-[48px] leading-none mb-1 drop-shadow`}>
+            {block.emoji || theme.hero}
+          </div>
+          <h3 className={`text-lg md:text-base font-bold ${theme.accent} leading-tight`}>
+            {block.label}
+          </h3>
+          <p className={`text-xs ${theme.accentMuted} mt-0.5`}>{timeRange}</p>
+
+          {yotoPrereqs && (
+            <YotoMilestone
+              prereqTasks={yotoPrereqs}
+              label={block.label === "Breakfast" ? "Finish wake-up by 7:00" : "All tasks by 7:35"}
+            />
+          )}
+        </div>
+
+        <div className="flex flex-col items-end gap-1 shrink-0">
+          {hasTasks && (
+            <span
+              className={`text-xs font-medium px-2 py-0.5 rounded-full border ${theme.badge}`}
+            >
+              {completedCount}/{tasks.length}
+            </span>
+          )}
+
+          {isNow && block.remainingMinutes != null && (
+            <span className={`text-base font-bold ${theme.accent} tabular-nums`}>
+              {minutesToDisplay(block.remainingMinutes)}
+            </span>
+          )}
+          {isPast && !hasTasks && (
+            <span className={`text-xs ${theme.accentMuted}`}>Done</span>
+          )}
+          {isNext && (
+            <span className="text-xs font-semibold text-amber-700 bg-amber-200/50 px-2 py-0.5 rounded-full">
+              Up Next
+            </span>
+          )}
+
+          <span
+            className={`${theme.accentMuted} transition-transform duration-200 text-sm ${
+              expanded ? "rotate-180" : ""
+            }`}
+          >
+            ▾
+          </span>
+        </div>
+      </div>
+
+      {block.description && (
+        <p
+          className={`relative z-10 text-xs ${theme.accentMuted} italic mt-2 leading-relaxed`}
+        >
+          {block.description}
+        </p>
+      )}
+    </>
+  );
+
+  const taskList = expanded && hasTasks ? (
+    <div className="bg-white/80 backdrop-blur-sm p-3 md:p-2 space-y-2 md:space-y-1 md:overflow-y-auto md:max-h-[320px] lg:max-h-[400px]">
+      {tasks.map((task, i) => (
+        <TaskCard
+          key={task.id}
+          task={task}
+          index={i}
+          isParent={isParent}
+          onMarkDone={onMarkDone}
+          onUndo={onUndo}
+          onAccept={onAccept}
+          onUnaccept={onUnaccept}
+        />
+      ))}
+    </div>
+  ) : expanded && !hasTasks && block.block_type !== "passive" ? (
+    <div className="bg-white/80 p-4 md:p-3">
+      <p className={`text-xs ${theme.accentMuted} italic`}>
+        No tasks — free block
+      </p>
+    </div>
+  ) : null;
+
   return (
     <div
       className={`rounded-3xl overflow-hidden transition-all ${
@@ -421,98 +509,54 @@ export default function ImmersiveBlockCard({
         isNext ? "ring-1 ring-amber-300" : ""
       } ${!isNow && !isPast && !isNext ? "opacity-90" : ""}`}
     >
-      {/* Hero banner — always visible, tappable */}
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className={`relative w-full bg-gradient-to-br ${theme.bg} p-5 pb-4 text-left active:brightness-95 transition-all min-h-[120px]`}
-      >
-        <SceneElements scene={theme.scene} />
+      {/* Portrait / narrow: stacked layout */}
+      <div className="md:hidden">
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className={`relative w-full bg-gradient-to-br ${theme.bg} p-5 pb-4 text-left active:brightness-95 transition-all min-h-[120px]`}
+        >
+          {heroContent}
+        </button>
+        {taskList}
+      </div>
 
-        <div className="relative z-10 flex items-start justify-between">
-          <div className="flex-1">
-            <div className={`${theme.heroSize} leading-none mb-1 drop-shadow`}>
-              {block.emoji || theme.hero}
-            </div>
-            <h3 className={`text-lg font-bold ${theme.accent} leading-tight`}>
-              {block.label}
-            </h3>
-            <p className={`text-xs ${theme.accentMuted} mt-0.5`}>{timeRange}</p>
-
-            {yotoPrereqs && (
-              <YotoMilestone
-                prereqTasks={yotoPrereqs}
-                label={block.label === "Breakfast" ? "Finish wake-up by 7:00" : "All tasks by 7:35"}
-              />
-            )}
-          </div>
-
-          <div className="flex flex-col items-end gap-1 shrink-0">
-            {hasTasks && (
-              <span
-                className={`text-xs font-medium px-2 py-0.5 rounded-full border ${theme.badge}`}
-              >
-                {completedCount}/{tasks.length}
-              </span>
-            )}
-
-            {isNow && block.remainingMinutes != null && (
-              <span className={`text-base font-bold ${theme.accent} tabular-nums`}>
-                {minutesToDisplay(block.remainingMinutes)}
-              </span>
-            )}
-            {isPast && !hasTasks && (
-              <span className={`text-xs ${theme.accentMuted}`}>Done</span>
-            )}
-            {isNext && (
-              <span className="text-xs font-semibold text-amber-700 bg-amber-200/50 px-2 py-0.5 rounded-full">
-                Up Next
-              </span>
-            )}
-
-            <span
-              className={`${theme.accentMuted} transition-transform duration-200 text-sm ${
-                expanded ? "rotate-180" : ""
-              }`}
+      {/* Landscape / wide: side-by-side when expanded */}
+      <div className="hidden md:block">
+        {!expanded || !hasTasks ? (
+          <>
+            <button
+              onClick={() => setExpanded(!expanded)}
+              className={`relative w-full bg-gradient-to-br ${theme.bg} p-4 pb-3 text-left active:brightness-95 transition-all min-h-[90px]`}
             >
-              ▾
-            </span>
+              {heroContent}
+            </button>
+            {taskList}
+          </>
+        ) : (
+          <div className="flex">
+            <button
+              onClick={() => setExpanded(!expanded)}
+              className={`relative bg-gradient-to-br ${theme.bg} p-4 pb-3 text-left active:brightness-95 transition-all min-h-[90px] w-2/5 shrink-0 rounded-l-3xl`}
+            >
+              {heroContent}
+            </button>
+            <div className="w-3/5 bg-white/80 backdrop-blur-sm p-2 space-y-1 overflow-y-auto max-h-[400px]">
+              {tasks.map((task, i) => (
+                <TaskCard
+                  key={task.id}
+                  task={task}
+                  index={i}
+                  isParent={isParent}
+                  onMarkDone={onMarkDone}
+                  onUndo={onUndo}
+                  onAccept={onAccept}
+                  onUnaccept={onUnaccept}
+                />
+              ))}
+            </div>
           </div>
-        </div>
-
-        {block.description && (
-          <p
-            className={`relative z-10 text-xs ${theme.accentMuted} italic mt-2 leading-relaxed`}
-          >
-            {block.description}
-          </p>
         )}
-      </button>
-
-      {/* Expandable tasks */}
-      {expanded && hasTasks && (
-        <div className="bg-white/80 backdrop-blur-sm p-3 space-y-2">
-          {tasks.map((task, i) => (
-            <TaskCard
-              key={task.id}
-              task={task}
-              index={i}
-              isParent={isParent}
-              onMarkDone={onMarkDone}
-              onUndo={onUndo}
-              onAccept={onAccept}
-              onUnaccept={onUnaccept}
-            />
-          ))}
-        </div>
-      )}
-
-      {expanded && !hasTasks && block.block_type !== "passive" && (
-        <div className="bg-white/80 p-4">
-          <p className={`text-xs ${theme.accentMuted} italic`}>
-            No tasks — free block
-          </p>
-        </div>
-      )}
+      </div>
     </div>
   );
 }

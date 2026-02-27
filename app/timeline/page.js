@@ -20,7 +20,7 @@ export default function TimelinePage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50 to-white">
       <NavBar />
-      <main className="max-w-lg mx-auto p-4 space-y-4">
+      <main className="max-w-lg md:max-w-2xl lg:max-w-4xl xl:max-w-5xl mx-auto p-4 space-y-4">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">Hi, {member.name}!</h1>

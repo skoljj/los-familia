@@ -160,7 +160,7 @@ export default function DashboardPage() {
           </div>
 
           {selectedChild && (
-            <div className="max-w-lg">
+            <div className="max-w-lg md:max-w-2xl lg:max-w-4xl xl:max-w-full">
               <Timeline
                 memberId={selectedChild}
                 familyId={family.id}
