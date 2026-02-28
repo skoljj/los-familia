@@ -123,6 +123,38 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* D-pad / remote focus states — visible ring on every interactive element */
+  a:focus-visible,
+  button:focus-visible,
+  [role="button"]:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  [tabindex]:focus-visible {
+    outline: 3px solid #3b82f6;
+    outline-offset: 2px;
+    border-radius: 8px;
+    box-shadow: 0 0 0 6px rgba(59, 130, 246, 0.2);
+    z-index: 10;
+    position: relative;
+  }
+}
+
+/* TV overscan safe area — 5% inset on all edges at 1080p landscape */
+@media (min-width: 1800px) and (min-height: 900px) {
+  .tv-safe {
+    padding: 54px 96px;
+  }
+}
+
+/* TV-optimized typography for 8-10 foot viewing */
+@media (min-width: 1800px) {
+  html { font-size: 20px; }
+
+  .tv-heading { font-size: 2.5rem; line-height: 1.2; font-weight: 700; }
+  .tv-subheading { font-size: 1.5rem; line-height: 1.3; font-weight: 600; }
+  .tv-body { font-size: 1.25rem; line-height: 1.5; }
+  .tv-label { font-size: 1rem; line-height: 1.4; font-weight: 500; }
 }
 
 @layer utilities {

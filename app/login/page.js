@@ -79,8 +79,11 @@ export default function LoginPage() {
             {members.map((m, i) => (
               <Card
                 key={m.id}
+                role="button"
+                tabIndex={0}
                 className="cursor-pointer hover:ring-2 hover:ring-primary transition-all active:scale-95"
                 onClick={() => setSelected(m)}
+                onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && setSelected(m)}
               >
                 <CardContent className="flex flex-col items-center gap-2 p-6">
                   <div

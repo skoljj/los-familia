@@ -44,7 +44,9 @@ export default function RootLayout({ children }) {
       >
         <AuthProvider>
           <ServiceWorkerRegistrar />
-          {children}
+          <div className="tv-safe">
+            {children}
+          </div>
         </AuthProvider>
       </body>
     </html>

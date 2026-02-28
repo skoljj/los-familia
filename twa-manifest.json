@@ -1,0 +1,31 @@
+{
+  "packageId": "com.losfamilia.app",
+  "host": "los-familia.vercel.app",
+  "name": "LOS Familia",
+  "launcherName": "LOS Familia",
+  "display": "standalone",
+  "orientation": "landscape",
+  "themeColor": "#3b82f6",
+  "navigationColor": "#f0f9ff",
+  "backgroundColor": "#f0f9ff",
+  "enableNotifications": false,
+  "startUrl": "/",
+  "iconUrl": "https://los-familia.vercel.app/icons/icon-512.png",
+  "maskableIconUrl": "https://los-familia.vercel.app/icons/icon-512.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "./debug.keystore",
+    "alias": "android"
+  },
+  "appVersionCode": 1,
+  "appVersionName": "1.0.0",
+  "shortcuts": [],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://los-familia.vercel.app/manifest.json",
+  "fallbackType": "customtabs",
+  "features": {},
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true
+}
